@@ -12,10 +12,13 @@ Double-click the shortcut → the `dsh web` server starts (if not already runnin
 
 - **One click to the web UI** — double-click the desktop icon and your browser jumps to DSH
 - **Auto-start server** — starts `dsh web` in a visible "DSH Server" console if it isn't running; closing that window stops the server
-- **Idempotent** — clicking again while the server is up just reopens the browser
+- **Idempotent** — clicking again while the server is up just reopens the browser; re-running the installer updates instead of failing
+- **Toast notifications** — a Windows notification tells you what's happening (starting / ready / timed out) even though the launcher runs hidden
 - **Official whale icon** — bundled `dsh.ico` generated from the official DSH favicon
 - **OneDrive-safe** — resolves your real Desktop path, even when redirected
 - **DSH skill included** — install it as a skill and any DSH agent can create the shortcut for you
+- **Clean uninstall** — bundled `uninstall.ps1` removes the shortcut, skill, and launcher in one go
+- **Versioned releases** — remote installs pull the latest [GitHub release](https://github.com/Ning668819/dsh-desktop-shortcut/releases), not random main-branch code
 - **Windows only** — PowerShell 5.1+, ships with Windows 10/11
 
 ## 📦 Installation
@@ -27,6 +30,7 @@ powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.c
 ```
 
 Installs the skill and creates the desktop shortcut in one go.
+The installer automatically fetches the **latest [release](https://github.com/Ning668819/dsh-desktop-shortcut/releases)** (falls back to `main` if none exists).
 
 ### Option B — Clone and run
 
@@ -69,6 +73,19 @@ powershell -ExecutionPolicy Bypass -File scripts\create-shortcut.ps1
 .\scripts\create-shortcut.ps1 -Force
 ```
 
+## 🗑️ Uninstall
+
+Run the bundled uninstaller (or, if you used the remote install, run the
+`uninstall.ps1` that was installed into your skill folder):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\uninstall.ps1
+```
+
+Removes the desktop shortcut, the installed skill folder, and the generated
+launcher script. Add `-Yes` to skip the confirmation prompt, or `-RemoveRepo`
+to also delete the local clone.
+
 ## 📁 Project layout
 
 ```
@@ -76,7 +93,8 @@ dsh-desktop-shortcut/
 ├── SKILL.md                  # DSH skill definition (agent instructions)
 ├── scripts/
 │   ├── install.ps1           # one-click installer (skill + shortcut)
-│   └── create-shortcut.ps1   # core shortcut creator (runnable standalone)
+│   ├── create-shortcut.ps1   # core shortcut creator (runnable standalone)
+│   └── uninstall.ps1         # clean uninstaller (shortcut + skill + launcher)
 ├── assets/
 │   ├── dsh.ico               # whale icon (multi-size, generated from official favicon)
 │   └── dsh-logo.svg          # source SVG
@@ -114,10 +132,13 @@ Run the script and confirm it prints `[ok]` lines, then double-click the new sho
 
 - **一键跳转网页** — 双击桌面图标，浏览器自动打开 DSH 页面
 - **自动启动服务器** — 未运行时自动开一个 "DSH Server" 控制台窗口启动 `dsh web`；关闭该窗口即停止服务器
-- **可重复点击** — 服务器已运行时再次双击只是重新打开浏览器
+- **可重复点击** — 服务器已运行时再次双击只是重新打开浏览器；重复安装也会自动更新而不是报错
+- **系统通知反馈** — 启动、就绪、超时都会弹出 Windows 通知，不会干等无反馈
 - **官方鲸鱼图标** — 内置 `dsh.ico`（由官方 favicon 生成，含多尺寸）
 - **兼容 OneDrive 桌面重定向**
 - **自带 DSH skill** — 安装为 skill 后，DSH 助手可以帮你创建快捷方式
+- **一键卸载** — 内置 `uninstall.ps1`，一次清理快捷方式 + skill + 启动脚本
+- **版本化发布** — 远程安装自动拉取最新 [GitHub Release](https://github.com/Ning668819/dsh-desktop-shortcut/releases)，不是随机的 main 分支代码
 - **仅支持 Windows** — 需要 PowerShell 5.1+（Win10/11 自带）
 
 ## 📦 安装
@@ -129,6 +150,7 @@ powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.c
 ```
 
 一次完成 skill 安装 + 桌面快捷方式创建。
+安装器会自动获取**最新 [Release](https://github.com/Ning668819/dsh-desktop-shortcut/releases)**（没有 Release 时回退到 main）。
 
 ### 方式 B — 克隆后运行
 
@@ -171,6 +193,16 @@ powershell -ExecutionPolicy Bypass -File scripts\create-shortcut.ps1
 .\scripts\create-shortcut.ps1 -Force
 ```
 
+## 🗑️ 卸载
+
+运行内置卸载脚本（远程安装的用户，直接运行 skill 目录里的 `uninstall.ps1` 即可）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\uninstall.ps1
+```
+
+会删除：桌面快捷方式、已安装的 skill 目录、生成的启动脚本。加 `-Yes` 跳过确认，加 `-RemoveRepo` 可连本地克隆一起删除。
+
 ## 📁 项目结构
 
 ```
@@ -178,7 +210,8 @@ dsh-desktop-shortcut/
 ├── SKILL.md                  # DSH skill 定义（agent 指令）
 ├── scripts/
 │   ├── install.ps1           # 一键安装器（skill + 快捷方式）
-│   └── create-shortcut.ps1   # 核心创建脚本（可单独运行）
+│   ├── create-shortcut.ps1   # 核心创建脚本（可单独运行）
+│   └── uninstall.ps1         # 一键卸载（快捷方式 + skill + 启动脚本）
 ├── assets/
 │   ├── dsh.ico               # 鲸鱼图标（多尺寸，由官方 favicon 生成）
 │   └── dsh-logo.svg          # 源 SVG
