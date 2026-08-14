@@ -88,7 +88,7 @@ dsh-desktop-shortcut/
 | Problem | Fix |
 | --- | --- |
 | `dsh` not found | Install DSH: `npm install -g @deepseek-ai/dsh`, or add it to PATH |
-| Shortcut already exists | Re-run with `-Force` |
+| Re-running says "already exists" | Since v1.1 the script updates an existing shortcut automatically; use `-Force` to overwrite explicitly |
 | Icon doesn't update on desktop | Press `F5` or restart Explorer |
 | Browser shows connection refused | The server failed to start — read the "DSH Server" console for the error |
 
@@ -190,7 +190,7 @@ dsh-desktop-shortcut/
 | 问题 | 解决 |
 | --- | --- |
 | 找不到 `dsh` 命令 | 先安装 DSH：`npm install -g @deepseek-ai/dsh`，或加入 PATH |
-| 提示快捷方式已存在 | 加 `-Force` 重新运行 |
+| 重复运行提示已存在 | v1.1 起脚本会自动更新已有快捷方式；想强制覆盖加 `-Force` |
 | 桌面图标没变 | 按 `F5` 刷新，或重启资源管理器 |
 | 浏览器提示无法连接 | 服务器启动失败——查看 "DSH Server" 控制台里的报错 |
 

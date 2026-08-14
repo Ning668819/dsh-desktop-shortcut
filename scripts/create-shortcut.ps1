@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 <#
 .SYNOPSIS
     Create a one-click desktop shortcut for DeepSeek Harness (DSH).
@@ -117,8 +117,12 @@ Start-Process `$url
 exit 1
 "@
 
-if ((Test-Path $LauncherScriptPath) -and -not $Force) {
-    throw "Launcher script already exists: $LauncherScriptPath (use -Force to overwrite)"
+if (Test-Path $LauncherScriptPath) {
+    if ($Force) {
+        Write-Host "[..] overwriting launcher script: $LauncherScriptPath" -ForegroundColor Yellow
+    } else {
+        Write-Host "[..] launcher script exists, updating: $LauncherScriptPath" -ForegroundColor Yellow
+    }
 }
 $utf8Bom = New-Object System.Text.UTF8Encoding($true)
 [System.IO.File]::WriteAllText($LauncherScriptPath, $launcherContent, $utf8Bom)
@@ -136,8 +140,12 @@ $iconLocation = if ($icon) { "$icon,0" } else { "$env:SystemRoot\System32\shell3
 
 # --- Shortcut ------------------------------------------------------------------
 $lnkPath = Join-Path $desktop "$ShortcutName.lnk"
-if ((Test-Path $lnkPath) -and -not $Force) {
-    throw "Shortcut already exists: $lnkPath (use -Force to overwrite)"
+if (Test-Path $lnkPath) {
+    if ($Force) {
+        Write-Host "[..] overwriting shortcut: $lnkPath" -ForegroundColor Yellow
+    } else {
+        Write-Host "[..] shortcut exists, updating: $lnkPath" -ForegroundColor Yellow
+    }
 }
 $ws = New-Object -ComObject WScript.Shell
 $lnk = $ws.CreateShortcut($lnkPath)
