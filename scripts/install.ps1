@@ -1,4 +1,4 @@
-﻿#requires -Version 5.1
+#requires -Version 5.1
 <#
 .SYNOPSIS
     One-click installer for the DSH Desktop Shortcut skill.
@@ -45,6 +45,10 @@
 .PARAMETER Branch
     Git branch to fetch in remote mode. Default: main
 
+.PARAMETER UseLatestRelease
+    In remote mode, prefer the latest GitHub release (tag) over the default
+    branch. Default: $true. Falls back to the branch when no release exists.
+
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
@@ -58,10 +62,11 @@
 param(
     [string]$InstallDir = '',
     [switch]$SkipShortcut,
-    [string]$ShortcutName = 'DSH 网页启动',
+    [string]$ShortcutName = '',   # empty -> create-shortcut.ps1 uses its own default name
     [string]$Url = 'http://127.0.0.1:3080',
     [string]$RepoUrl = 'https://github.com/Ning668819/dsh-desktop-shortcut',
-    [string]$Branch = 'main'
+    [string]$Branch = 'main',
+    [switch]$UseLatestRelease = $true
 )
 
 $ErrorActionPreference = 'Stop'
@@ -83,7 +88,22 @@ if (-not $localRoot) {
     $tempRoot = Join-Path $env:TEMP ("dsh-desktop-shortcut-" + [guid]::NewGuid().ToString('N'))
     $zip = Join-Path $tempRoot 'repo.zip'
     New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
-    $zipUrl = "$RepoUrl/archive/refs/heads/$Branch.zip"
+
+    # Prefer the latest GitHub release tag; fall back to the branch.
+    $ref = "heads/$Branch"
+    if ($UseLatestRelease) {
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $release = Invoke-RestMethod -Uri "$RepoUrl/releases/latest" -UseBasicParsing -ErrorAction Stop
+            if ($release.tag_name) {
+                $ref = "tags/$($release.tag_name)"
+                Write-Host "[ok] using latest release: $($release.tag_name)" -ForegroundColor Green
+            }
+        } catch {
+            Write-Host "[..] no release found, using branch '$Branch'" -ForegroundColor DarkGray
+        }
+    }
+    $zipUrl = "$RepoUrl/archive/refs/$ref.zip"
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $zipUrl -OutFile $zip -UseBasicParsing
@@ -92,13 +112,11 @@ if (-not $localRoot) {
         throw "Failed to download repository zip from $zipUrl : $($_.Exception.Message)"
     }
     Expand-Archive -Path $zip -DestinationPath $tempRoot -Force
-    $localRoot = Join-Path $tempRoot "$skillName-$Branch"
-    if (-not (Test-Path (Join-Path $localRoot 'SKILL.md'))) {
-        # fall back to any extracted folder containing SKILL.md
-        $localRoot = Get-ChildItem $tempRoot -Directory -Recurse -ErrorAction SilentlyContinue |
-            Where-Object { Test-Path (Join-Path $_.FullName 'SKILL.md') } |
-            Select-Object -First 1 -ExpandProperty FullName
-    }
+
+    # Locate the extracted skill bundle (folder containing SKILL.md).
+    $localRoot = Get-ChildItem $tempRoot -Directory -Recurse -ErrorAction SilentlyContinue |
+        Where-Object { Test-Path (Join-Path $_.FullName 'SKILL.md') } |
+        Select-Object -First 1 -ExpandProperty FullName
     if (-not $localRoot) {
         Remove-Item $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
         throw "Downloaded archive did not contain a valid skill bundle."
@@ -146,7 +164,9 @@ if (-not $SkipShortcut) {
     Write-Host ""
     $creator = Join-Path $InstallDir 'scripts\create-shortcut.ps1'
     if (Test-Path $creator) {
-        & $creator -ShortcutName $ShortcutName -Url $Url
+        $creatorArgs = @('-Url', $Url)
+        if ($ShortcutName) { $creatorArgs += @('-ShortcutName', $ShortcutName) }
+        & $creator @creatorArgs
     } else {
         Write-Warning "create-shortcut.ps1 not found at $creator; skipping shortcut creation."
     }
@@ -167,3 +187,4 @@ Write-Host "Installation complete." -ForegroundColor Green
 Write-Host "  Skill dir : $InstallDir" -ForegroundColor Gray
 Write-Host "  Usage     : ask your DSH agent to 'create a desktop shortcut for DSH'," -ForegroundColor Gray
 Write-Host "              or double-click the shortcut created on your desktop." -ForegroundColor Gray
+Write-Host "  Uninstall : powershell -ExecutionPolicy Bypass -File `"$InstallDir\scripts\uninstall.ps1`"" -ForegroundColor Gray
